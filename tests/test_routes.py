@@ -1,25 +1,25 @@
-from flask import Flask
 import json
 
-from flask_pytest_example.handlers.routes import configure_routes
+from flask import Flask
+
+from handlers.routes import configure_routes
+
+_app = Flask(__name__)
+configure_routes(_app)
+
+_url = {'base': '/', 'post': '/post/test'}
 
 
 def test_base_route():
-    app = Flask(__name__)
-    configure_routes(app)
-    client = app.test_client()
-    url = '/'
+    client = _app.test_client()
 
-    response = client.get(url)
+    response = client.get(_url['base'])
     assert response.get_data() == b'Hello, World!'
     assert response.status_code == 200
 
 
 def test_post_route__success():
-    app = Flask(__name__)
-    configure_routes(app)
-    client = app.test_client()
-    url = '/post/test'
+    client = _app.test_client()
 
     mock_request_headers = {
         'authorization-sha256': '123'
@@ -33,15 +33,12 @@ def test_post_route__success():
         }
     }
 
-    response = client.post(url, data=json.dumps(mock_request_data), headers=mock_request_headers)
+    response = client.post(_url['post'], data=json.dumps(mock_request_data), headers=mock_request_headers)
     assert response.status_code == 200
 
 
 def test_post_route__failure__unauthorized():
-    app = Flask(__name__)
-    configure_routes(app)
-    client = app.test_client()
-    url = '/post/test'
+    client = _app.test_client()
 
     mock_request_headers = {}
 
@@ -53,15 +50,12 @@ def test_post_route__failure__unauthorized():
         }
     }
 
-    response = client.post(url, data=json.dumps(mock_request_data), headers=mock_request_headers)
+    response = client.post(_url['post'], data=json.dumps(mock_request_data), headers=mock_request_headers)
     assert response.status_code == 401
 
 
 def test_post_route__failure__bad_request():
-    app = Flask(__name__)
-    configure_routes(app)
-    client = app.test_client()
-    url = '/post/test'
+    client = _app.test_client()
 
     mock_request_headers = {
         'authorization-sha256': '123'
@@ -69,5 +63,5 @@ def test_post_route__failure__bad_request():
 
     mock_request_data = {}
 
-    response = client.post(url, data=json.dumps(mock_request_data), headers=mock_request_headers)
+    response = client.post(_url['post'], data=json.dumps(mock_request_data), headers=mock_request_headers)
     assert response.status_code == 400
